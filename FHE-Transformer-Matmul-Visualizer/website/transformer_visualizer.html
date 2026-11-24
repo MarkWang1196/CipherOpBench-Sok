@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Secure Transformer Survey — Matrix Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./transformer/styles.css?v=20261118-3" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
+
+    <div class="tv-shell">
+      <!-- Shared survey navigation -->
+      <nav>
+        <a class="brand" href="./index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          Secure Transformer Survey
+        </a>
+        <div class="nav-links">
+          <a href="./index.html">Home</a>
+          <a href="./transformer_visualizer.html" aria-current="page">Matrix Visualizer</a>
+          <a href="./visualizer.html">Packing Lab</a>
+        </div>
+      </nav>
+
+      <header class="tv-header">
+        <div class="tv-heading-row">
+          <div>
+            <h1>FHE Transformer Matmul</h1>
+            <p class="tv-sub">Method-faithful matrix packing and encrypted dataflow</p>
+          </div>
+          <p class="tv-disclaimer">Educational visualization · no browser-side encryption</p>
+        </div>
+        <div class="tv-method-switch" role="group" aria-label="Inference method">
+          <button type="button" class="tv-method-btn tv-method-btn--active" data-method="thor" aria-pressed="true">
+            <span>CCS'25</span><strong>THOR</strong>
+          </button>
+          <button type="button" class="tv-method-btn" data-method="moai" aria-pressed="false">
+            <span>ICLR'26</span><strong>MOAI</strong>
+          </button>
+          <button type="button" class="tv-method-btn" data-method="blb" aria-pressed="false">
+            <span>USENIX Security'25</span><strong>BLB</strong>
+          </button>
+          <button type="button" class="tv-method-btn" data-method="cachemir" aria-pressed="false">
+            <span>S&amp;P'27</span><strong>Cachemir</strong>
+          </button>
+          <button type="button" class="tv-method-btn" data-method="euston" aria-pressed="false">
+            <span>S&amp;P'26</span><strong>Euston</strong>
+          </button>
+          <button type="button" class="tv-method-btn" data-method="stip" aria-pressed="false">
+            <span>ePrint'26</span><strong>STIP</strong>
+          </button>
+          <button type="button" class="tv-method-btn" data-method="nexus" aria-pressed="false">
+            <span>NDSS'25</span><strong>NEXUS</strong>
+          </button>
+        </div>
+
+        <section class="tv-method-context" aria-label="Current method and operation">
+          <div class="tv-method-context-copy">
+            <strong id="method-context-title">THOR · XWq</strong>
+            <span id="method-context-subtitle">CCS'25 THOR</span>
+          </div>
+          <div class="tv-context-traits" aria-label="Current matrix multiplication properties">
+            <span id="context-matmul">PT × CT</span>
+            <span id="context-packing">Diagonal packing</span>
+            <span id="context-shape">4×4 · 4×2</span>
+            <span id="context-slots">8 slots / CT</span>
+          </div>
+          <button type="button" class="tv-btn tv-context-edit" data-action="open-matrix-editor">
+            Edit matrices
+          </button>
+        </section>
+
+        <div class="tv-method-panel" data-method-panel="thor">
+          <div class="tv-op-groups" aria-label="THOR algorithms and transformer operations">
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Core algorithms</span>
+              <div class="tv-ops" role="group" aria-label="THOR core algorithms">
+                <button type="button" class="tv-op tv-op--paper" data-algorithm="thor-pcmm" aria-pressed="false">PC-MM</button>
+                <button type="button" class="tv-op tv-op--paper" data-algorithm="thor-ccmm" aria-pressed="false">CC-MM</button>
+              </div>
+            </div>
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention</span>
+              <div class="tv-ops" role="group" aria-label="THOR attention matrix multiplications">
+                <button type="button" class="tv-op" data-thor-operation="thor-query" aria-pressed="true">XWq</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-context" aria-pressed="false">SV</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-output" aria-pressed="false">HWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Feed-forward</span>
+              <div class="tv-ops" role="group" aria-label="THOR feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-thor-operation="thor-fc1" aria-pressed="false">FC1</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-fc2" aria-pressed="false">FC2</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Model output</span>
+              <div class="tv-ops" role="group" aria-label="THOR output matrix multiplications">
+                <button type="button" class="tv-op" data-thor-operation="thor-pooler" aria-pressed="false">Pooler</button>
+                <button type="button" class="tv-op" data-thor-operation="thor-classifier" aria-pressed="false">Classifier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-method-panel" data-method-panel="moai" hidden>
+          <div class="tv-op-groups" aria-label="MOAI transformer operations">
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention</span>
+              <div class="tv-ops" role="group" aria-label="MOAI attention matrix multiplications">
+                <button type="button" class="tv-op" data-moai-operation="moai-query" aria-pressed="false">XWq</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-context" aria-pressed="false">SV</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-output" aria-pressed="false">HWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Feed-forward</span>
+              <div class="tv-ops" role="group" aria-label="MOAI feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-moai-operation="moai-fc1" aria-pressed="false">FC1</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-fc2" aria-pressed="false">FC2</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Model output</span>
+              <div class="tv-ops" role="group" aria-label="MOAI output matrix multiplications">
+                <button type="button" class="tv-op" data-moai-operation="moai-pooler" aria-pressed="false">Pooler</button>
+                <button type="button" class="tv-op" data-moai-operation="moai-classifier" aria-pressed="false">Classifier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-method-panel" data-method-panel="blb" hidden>
+          <div class="tv-op-groups" aria-label="BLB transformer operations">
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention</span>
+              <div class="tv-ops" role="group" aria-label="BLB attention matrix multiplications">
+                <button type="button" class="tv-op" data-blb-operation="blb-query" aria-pressed="false">XWq</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-context" aria-pressed="false">SV</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-output" aria-pressed="false">HWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Feed-forward</span>
+              <div class="tv-ops" role="group" aria-label="BLB feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-blb-operation="blb-fc1" aria-pressed="false">FC1</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-fc2" aria-pressed="false">FC2</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">MPC output</span>
+              <div class="tv-ops" role="group" aria-label="BLB output matrix multiplications">
+                <button type="button" class="tv-op" data-blb-operation="blb-pooler" aria-pressed="false">Pooler</button>
+                <button type="button" class="tv-op" data-blb-operation="blb-classifier" aria-pressed="false">Classifier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-method-panel" data-method-panel="cachemir" hidden>
+          <div class="tv-op-groups" aria-label="Cachemir LLaMA decoding operations">
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention + KV cache</span>
+              <div class="tv-ops" role="group" aria-label="Cachemir attention matrix multiplications">
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-query" aria-pressed="false">XWq</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-context" aria-pressed="false">Softmax·V</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-output" aria-pressed="false">AttWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">SwiGLU FFN</span>
+              <div class="tv-ops" role="group" aria-label="Cachemir feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-up" aria-pressed="false">Up</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-gate" aria-pressed="false">Gate</button>
+                <button type="button" class="tv-op" data-cachemir-operation="cachemir-down" aria-pressed="false">Down</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-method-panel" data-method-panel="euston" hidden>
+          <div class="tv-op-groups" aria-label="Euston transformer operations">
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Core primitives</span>
+              <div class="tv-ops" role="group" aria-label="Euston matrix multiplication primitives">
+                <button type="button" class="tv-op" data-euston-operation="euston-pccdmm" aria-pressed="false">PCCDMM</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-ccpumm" aria-pressed="false">CCPUMM</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-cccrmm" aria-pressed="false">CCCRMM</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-cdccmm" aria-pressed="false">CDCCMM</button>
+              </div>
+            </div>
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention</span>
+              <div class="tv-ops" role="group" aria-label="Euston attention matrix multiplications">
+                <button type="button" class="tv-op" data-euston-operation="euston-query" aria-pressed="false">XWq</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-context" aria-pressed="false">Softmax·V</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-output" aria-pressed="false">YWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Feed-forward</span>
+              <div class="tv-ops" role="group" aria-label="Euston feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-euston-operation="euston-fc1" aria-pressed="false">FC1</button>
+                <button type="button" class="tv-op" data-euston-operation="euston-fc2" aria-pressed="false">FC2</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-method-panel" data-method-panel="stip" hidden>
+          <div class="tv-op-groups" aria-label="STIP compact-packing Transformer operations">
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Core primitives</span>
+              <div class="tv-ops" role="group" aria-label="STIP core algorithms">
+                <button type="button" class="tv-op" data-stip-operation="stip-rihp" aria-pressed="false">RIHP QKᵀ</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-l2" aria-pressed="false">RIHP L2</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-dhp" aria-pressed="false">DHP</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-amcp" aria-pressed="false">AMCP</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-bsgs" aria-pressed="false">RIHP + BSGS</button>
+              </div>
+            </div>
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention</span>
+              <div class="tv-ops" role="group" aria-label="STIP attention matrix multiplications">
+                <button type="button" class="tv-op" data-stip-operation="stip-query" aria-pressed="false">XWq</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-distance" aria-pressed="false">L2(Q,K)</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-context" aria-pressed="false">GK·V</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-output" aria-pressed="false">HWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Feed-forward</span>
+              <div class="tv-ops" role="group" aria-label="STIP feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-stip-operation="stip-fc1" aria-pressed="false">FC1</button>
+                <button type="button" class="tv-op" data-stip-operation="stip-fc2" aria-pressed="false">FC2</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-method-panel" data-method-panel="nexus" hidden>
+          <div class="tv-op-groups" aria-label="NEXUS non-interactive Transformer operations">
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Core primitives</span>
+              <div class="tv-ops" role="group" aria-label="NEXUS core algorithms">
+                <button type="button" class="tv-op" data-nexus-operation="nexus-decompress" aria-pressed="false">Compress / Decompress</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-offline-online" aria-pressed="false">Offline / Online MM</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-column-ccmm" aria-pressed="false">Column CCMM</button>
+              </div>
+            </div>
+            <div class="tv-op-group tv-op-group--wide">
+              <span class="tv-op-group-label">Attention</span>
+              <div class="tv-ops" role="group" aria-label="NEXUS attention matrix multiplications">
+                <button type="button" class="tv-op" data-nexus-operation="nexus-query" aria-pressed="false">XWq</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-key" aria-pressed="false">XWk</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-value" aria-pressed="false">XWv</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-score" aria-pressed="false">QKᵀ</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-context" aria-pressed="false">Softmax·V</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-output" aria-pressed="false">HWo</button>
+              </div>
+            </div>
+            <div class="tv-op-group">
+              <span class="tv-op-group-label">Feed-forward</span>
+              <div class="tv-ops" role="group" aria-label="NEXUS feed-forward matrix multiplications">
+                <button type="button" class="tv-op" data-nexus-operation="nexus-fc1" aria-pressed="false">FC1</button>
+                <button type="button" class="tv-op" data-nexus-operation="nexus-fc2" aria-pressed="false">FC2</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="tv-layout">
+        <aside class="tv-step-rail" aria-label="Algorithm steps">
+          <div class="tv-step-rail-head">
+            <span>Algorithm steps</span>
+            <strong id="step-count">0 steps</strong>
+          </div>
+          <ol class="tv-stepchips" id="step-chips" aria-label="Steps"></ol>
+        </aside>
+
+        <!-- Right: current step details + optional inputs -->
+        <aside class="tv-side" aria-label="Controls">
+          <details class="tv-panel tv-current-panel" open>
+            <summary>Current step</summary>
+            <div id="step-formula-view"></div>
+            <div class="tv-current-metrics-title">Operation cost</div>
+            <div id="step-metrics-view"></div>
+          </details>
+
+          <details class="tv-panel" id="matrix-editor-panel">
+            <summary>Custom matrices</summary>
+            <form class="tv-form" id="input-form" novalidate>
+              <div class="tv-live-status" data-live-status data-state="ok" aria-live="polite">
+                Live update enabled
+              </div>
+              <p class="tv-algorithm-note" data-algorithm-note hidden></p>
+              <div class="tv-form-row" data-thor-ccmm-controls hidden>
+                <label>
+                  Figure 4 approach
+                  <select data-field="thorCcmmMethod">
+                    <option value="lower-lower" selected>Lower-Lower Basic</option>
+                    <option value="upper-lower">Upper-Lower</option>
+                  </select>
+                </label>
+              </div>
+              <div class="tv-form-row">
+                <label>
+                  M (A rows)
+                  <input type="number" data-field="m" value="4" min="1" max="64" required />
+                  <span class="tv-err" data-error="m"></span>
+                </label>
+                <label>
+                  K (shared)
+                  <input type="number" data-field="k" value="4" min="1" max="64" required />
+                  <span class="tv-err" data-error="k"></span>
+                </label>
+                <label>
+                  N (B cols)
+                  <input type="number" data-field="n" value="4" min="1" max="64" required />
+                  <span class="tv-err" data-error="n"></span>
+                </label>
+              </div>
+
+              <div class="tv-form-row">
+                <label>
+                  A type
+                  <select data-field="leftType">
+                    <option value="ct" selected>ciphertext (CT)</option>
+                    <option value="pt">plaintext (PT)</option>
+                  </select>
+                </label>
+                <label>
+                  B type
+                  <select data-field="rightType">
+                    <option value="pt" selected>plaintext (PT)</option>
+                    <option value="ct">ciphertext (CT)</option>
+                  </select>
+                </label>
+                <label>
+                  Slots / CT
+                  <select data-field="slots">
+                    <option value="8">8</option>
+                    <option value="16" selected>16</option>
+                    <option value="32">32</option>
+                    <option value="64">64</option>
+                    <option value="128">128</option>
+                    <option value="256">256</option>
+                    <option value="512">512</option>
+                  </select>
+                  <span class="tv-err" data-error="slots"></span>
+                </label>
+              </div>
+
+              <div class="tv-form-row">
+                <label>
+                  Packing strategy
+                  <select data-field="strategy">
+                    <option value="auto" selected>Auto</option>
+                    <option value="row">Row</option>
+                    <option value="column">Column</option>
+                    <option value="diagonal">Diagonal</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                  <span class="tv-err" data-error="strategy"></span>
+                </label>
+                <label>
+                  Values
+                  <select data-field="valueMode">
+                    <option value="manual" selected>Manual / paste</option>
+                    <option value="sequential">Sequential 1..N</option>
+                    <option value="random">Random (−4..4)</option>
+                    <option value="zero-one">Zero / one</option>
+                  </select>
+                </label>
+                <label>
+                  Seed
+                  <input type="number" data-field="seed" value="1" min="0" />
+                </label>
+              </div>
+
+              <div data-field-custom="group" hidden>
+                <p class="tv-form-hint">
+                  Custom layouts must parse with <code>Layout.fromString</code> (e.g.
+                  <code>[0:4:1][1:4:1]</code>). Generation is blocked on a parse failure.
+                </p>
+                <label class="tv-form-block">
+                  A layout
+                  <input type="text" data-field="customLeft" spellcheck="false" placeholder="[0:4:1][1:4:1]" />
+                </label>
+                <label class="tv-form-block">
+                  B layout
+                  <input type="text" data-field="customRight" spellcheck="false" placeholder="[1:2:1][0:4:1]" />
+                </label>
+                <label class="tv-form-block">
+                  Output layout <span class="tv-opt">(optional)</span>
+                  <input type="text" data-field="customOutput" spellcheck="false" placeholder="[0:4:1][1:4:1]" />
+                </label>
+              </div>
+
+              <label class="tv-form-block">
+                <span data-matrix-name="left">A</span> <span class="tv-opt" data-matrix-shape="left">4×4</span>
+                <textarea data-field="valuesA" rows="4" spellcheck="false" wrap="off">1 2 0 1
+0 1 3 2
+2 0 1 1
+1 1 2 0</textarea>
+                <span class="tv-err" data-error="values"></span>
+              </label>
+              <label class="tv-form-block">
+                <span data-matrix-name="right">B</span> <span class="tv-opt" data-matrix-shape="right">4×2</span>
+                <textarea data-field="valuesB" rows="4" spellcheck="false" wrap="off">1 0 2 1
+0 1 1 2
+2 1 0 1
+1 2 1 0</textarea>
+              </label>
+
+              <div class="tv-form-actions">
+                <button type="button" class="tv-btn tv-btn-primary" data-action="generate">Generate visualization</button>
+                <button type="button" class="tv-btn" data-action="load-defaults">Load 4×4 example</button>
+              </div>
+            </form>
+          </details>
+
+          <details class="tv-panel">
+            <summary>Plan</summary>
+            <div id="plan-view" class="tv-plan"></div>
+          </details>
+
+          <details class="tv-panel">
+            <summary>Output tiles</summary>
+            <div id="tile-view"></div>
+          </details>
+
+          <details class="tv-panel">
+            <summary>Help &amp; keyboard</summary>
+            <ul class="tv-help">
+              <li><kbd>Space</kbd> play / pause</li>
+              <li><kbd>←</kbd> / <kbd>→</kbd> previous / next step</li>
+              <li><kbd>Home</kbd> / <kbd>End</kbd> first / last step</li>
+              <li><kbd>R</kbd> replay current step</li>
+              <li><kbd>Esc</kbd> clear pinned highlight</li>
+              <li>Hover to highlight provenance; click to pin.</li>
+            </ul>
+          </details>
+        </aside>
+
+        <!-- Center: visualization + playback -->
+        <main class="tv-main">
+          <div class="tv-work" id="grid-wrap">
+            <section class="tv-story-view" id="story-view" aria-label="Algorithm visualization flow">
+              <header class="tv-story-header">
+                <div>
+                  <h2 id="story-title">Matrix multiplication dataflow</h2>
+                  <p id="story-subtitle"></p>
+                </div>
+                <div class="tv-story-legend" aria-label="Legend">
+                  <span><i class="tv-legend-swatch tv-legend-pt"></i>PT</span>
+                  <span><i class="tv-legend-swatch tv-legend-ct"></i>CT</span>
+                  <span id="mpc-legend" hidden><i class="tv-legend-swatch tv-legend-mpc"></i>MPC</span>
+                  <span title="Fill color indicates the packing group">
+                    <i class="tv-paper-swatch tv-paper-swatch--0"></i>
+                    <i class="tv-paper-swatch tv-paper-swatch--1"></i>
+                    <i class="tv-paper-swatch tv-paper-swatch--2"></i>
+                    <i class="tv-paper-swatch tv-paper-swatch--3"></i>
+                    <b id="packing-legend-label">= CT</b>
+                  </span>
+                  <span id="interleaved-legend" hidden title="Two independent lanes inside each ciphertext">
+                    <i class="tv-legend-swatch tv-legend-batch"></i><span id="batch-symbols">b₀ b₁</span>
+                  </span>
+                  <span id="sample-lane-legend" hidden title="Marks the sample in each slot">
+                    <i class="tv-slot-marker" data-sample-lane="0" aria-hidden="true"></i>Sample 0
+                    <i class="tv-slot-marker" data-sample-lane="1" aria-hidden="true"></i>Sample 1
+                  </span>
+                  <span id="padding-legend" hidden><b aria-hidden="true">·</b>Padding (0)</span>
+                </div>
+              </header>
+              <div class="tv-story-viewport" id="story-viewport" tabindex="0" aria-label="Scrollable algorithm canvas">
+                <div class="tv-story-canvas" id="story-canvas"></div>
+              </div>
+              <div class="tv-story-detail" id="story-detail"></div>
+            </section>
+
+            <div class="tv-inspector-work" id="inspector-view" hidden>
+              <svg class="tv-connections" id="connections" aria-hidden="true"></svg>
+              <section class="tv-pane tv-pane-tensor" aria-label="Matrices">
+                <h2 class="tv-pane-title">Matrices</h2>
+                <div class="tv-pane-body" id="tensor-view"></div>
+              </section>
+              <section class="tv-pane tv-pane-slots" aria-label="Ciphertext slots">
+                <h2 class="tv-pane-title">Ciphertext slots</h2>
+                <div class="tv-pane-body" id="ciphertext-view"></div>
+              </section>
+              <section class="tv-pane tv-pane-explain" aria-label="Explanation">
+                <h2 class="tv-pane-title">Explanation</h2>
+                <div class="tv-pane-body" id="formula-view"></div>
+                <h2 class="tv-pane-title">Operation metrics</h2>
+                <div class="tv-pane-body" id="metrics-view"></div>
+              </section>
+            </div>
+          </div>
+
+          <div class="tv-timeline" role="group" aria-label="Playback controls">
+            <div class="tv-view-switch" role="group" aria-label="Visualization view">
+              <button type="button" class="tv-view-btn tv-view-btn--active" data-view="story" aria-pressed="true">Algorithm flow</button>
+              <button type="button" class="tv-view-btn" data-view="inspector" aria-pressed="false">Inspector</button>
+            </div>
+            <button type="button" id="btn-first" class="tv-btn tv-btn-secondary-nav" title="First step (Home)" aria-label="First step">«</button>
+            <button type="button" id="btn-prev" class="tv-btn" title="Previous step (←)" aria-label="Previous step">‹</button>
+            <button type="button" id="btn-play" class="tv-btn tv-btn-primary" aria-pressed="false" aria-label="Play">Play</button>
+            <button type="button" id="btn-next" class="tv-btn" title="Next step (→)" aria-label="Next step">›</button>
+            <button type="button" id="btn-last" class="tv-btn tv-btn-secondary-nav" title="Last step (End)" aria-label="Last step">»</button>
+            <button type="button" id="btn-replay" class="tv-btn tv-btn-secondary-nav" title="Replay current step (R)" aria-label="Replay current step">Replay</button>
+            <input type="range" id="range-step" min="0" max="0" step="1" value="0" aria-label="Step progress" />
+            <span id="step-label" class="tv-step-label">0 / 0</span>
+            <label class="tv-speed">
+              <span class="tv-speed-label">Speed</span>
+              <select id="speed-select">
+                <option value="0.5">0.5×</option>
+                <option value="1" selected>1×</option>
+                <option value="1.5">1.5×</option>
+                <option value="2">2×</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="tv-live" id="live-region" aria-live="polite"></div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="./transformer/app.js?v=20261118-3"></script>
+  </body>
+</html>

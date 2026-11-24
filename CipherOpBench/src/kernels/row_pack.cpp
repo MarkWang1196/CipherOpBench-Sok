@@ -1,0 +1,148 @@
+// Adapted from NEXUS-End2End@23288730907fdb7a8ff7e4683efca35164f3cb8d.
+// Arithmetic schedule retained; graph composition belongs to cipheropbench.
+#include "cipheropbench/kernels/row_pack.h"
+
+namespace cipheropbench::kernels {
+using namespace ::nexus;
+
+using namespace std;
+
+// Row pack for 128x768 matrix
+FlatVecArray row_pack_128x768(torch::Tensor matrix) {
+    auto splitted_matrix = torch::split(matrix, 128, 1);
+    return FlatVecArray{
+        flatten_pack(splitted_matrix[0], splitted_matrix[1]), 
+        flatten_pack(splitted_matrix[2], splitted_matrix[3]), 
+        flatten_pack(splitted_matrix[4], splitted_matrix[5]), 
+    };
+}
+
+// Row pack for 768x64x2 matrices
+FlatVecArray row_pack_768x64x2(torch::Tensor matrix1, torch::Tensor matrix2) {
+    std::array<torch::Tensor, 6> mat_res;
+
+    for (int i = 0; i < 3; ++i) {
+        mat_res[i] = torch::zeros({2*128, 128}, torch::kDouble);
+        mat_res[i+3] = torch::zeros({2*128, 128}, torch::kDouble);
+
+        mat_res[i].slice(1, 0, 64) = torch::concat({
+            matrix1.slice(0, i*256, i*256+128), 
+            matrix2.slice(0, i*256+128, i*256+256)});
+        mat_res[i+3].slice(1, 0, 64) = torch::concat({
+            matrix2.slice(0, i*256, i*256+128), 
+            matrix1.slice(0, i*256+128, i*256+256)});
+    }
+
+    FlatVecArray result(6);
+    for (int i = 0; i < 6; i++) {
+        result[i] = vector_from_tensor(mat_res[i]);
+    }
+    return result;
+}
+
+// Row pack for 768x768 matrix
+FlatVecMat row_pack_768x768(torch::Tensor matrix) {
+    vector<vector<torch::Tensor>> mat_res(3, vector<torch::Tensor>(6));
+    FlatVecMat results(3);
+
+    for (int m = 0; m < 3; ++m) {
+        torch::Tensor matrix1 = matrix.slice(1, m*256, m*256+128);
+        torch::Tensor matrix2 = matrix.slice(1, m*256+128, m*256+256);
+        for (int i = 0; i < 3; ++i) {
+            mat_res[m][i] = torch::concat({
+                matrix1.slice(0, i*256, i*256+128), 
+                matrix2.slice(0, i*256+128, i*256+256)});
+            mat_res[m][i+3] = torch::concat({
+                matrix2.slice(0, i*256, i*256+128), 
+                matrix1.slice(0, i*256+128, i*256+256)});
+        }
+        results[m].resize(6);
+        for (int i = 0; i < 6; i++) {
+            results[m][i] = vector_from_tensor(mat_res[m][i]);
+        }
+    }
+
+    return results;
+}
+
+// Row pack for 768x128 matrix
+FlatVecArray row_pack_768x128(torch::Tensor matrix) {
+    auto splitted_matrix = torch::split(matrix, 128, 0);
+    return FlatVecArray{
+        flatten_pack(splitted_matrix[0], splitted_matrix[1]), 
+        flatten_pack(splitted_matrix[2], splitted_matrix[3]), 
+        flatten_pack(splitted_matrix[4], splitted_matrix[5]), 
+    };
+}
+
+// Row pack for 128x1 vector
+FlatVec row_pack_128x1(torch::Tensor vector) {
+    return vector_from_tensor(torch::tile(vector, {2*128, 1}));
+}
+
+// Row pack for 64x1x2 vectors
+FlatVec row_pack_64x1x2(torch::Tensor vector1, torch::Tensor vector2) {
+    torch::Tensor buf = torch::zeros({2*128, 128}, torch::kDouble);
+    buf.slice(1, 0, 64) = torch::concat({
+        torch::tile(vector1.unsqueeze(0), {128, 1}), 
+        torch::tile(vector2.unsqueeze(0), {128, 1})});
+    return vector_from_tensor(buf);
+}
+
+// Row pack for 768x1 vector
+FlatVecArray row_pack_768x1(torch::Tensor vector) {
+    std::vector<torch::Tensor> mm_res(3);
+    for (int m = 0; m < 3; m++) {
+        torch::Tensor vector1 = vector.slice(0, m * 256, m * 256 + 128);
+        torch::Tensor vector2 = vector.slice(0, m * 256 + 128, m * 256 + 256);
+        mm_res[m] = torch::concat({
+            torch::tile(vector1.unsqueeze(0), {128, 1}),
+            torch::tile(vector2.unsqueeze(0), {128, 1})});
+    }
+    FlatVecArray result(3);
+    for (int i = 0; i < 3; i++) {
+        result[i] = vector_from_tensor(mm_res[i]);
+    }
+    return result;
+}
+
+FlatVec convert_mask(torch::Tensor mask) {
+    TORCH_CHECK_EQ(mask.dtype(), torch::kBool);
+    TORCH_CHECK_EQ(mask.size(0), 128);
+    TORCH_CHECK_EQ(mask.size(1), 128);
+
+    torch::Tensor new_mask = torch::zeros_like(mask, torch::kDouble);
+
+    new_mask.masked_fill_(~mask, -100);
+    auto attention_mask = vector_from_tensor(new_mask);
+    attention_mask.insert(attention_mask.end(), attention_mask.begin(), attention_mask.end());
+    return attention_mask;
+}
+
+std::pair<FlatVecArray, FlatVecArray> row_pack_layer_norm(torch::Tensor weight, torch::Tensor bias) {
+    TORCH_CHECK_EQ(weight.dtype(), torch::kDouble);
+    TORCH_CHECK_EQ(bias.dtype(), torch::kDouble);
+    TORCH_CHECK_EQ(weight.size(0), 768);
+    TORCH_CHECK_EQ(bias.size(0), 768);
+
+    auto weight_slice = torch::split(weight, 128, 0);
+    auto bias_slice = torch::split(bias, 128, 0);
+    
+    FlatVecArray weight_vec(3), bias_vec(3);
+
+    for (int m = 0; m < 3; m++) {
+        weight_vec[m] = vector_from_tensor(
+            torch::concat({
+                torch::tile(weight_slice[2*m].unsqueeze(0), {128, 1}),
+                torch::tile(weight_slice[2*m+1].unsqueeze(0), {128, 1})})
+        );
+        bias_vec[m] = vector_from_tensor(
+            torch::concat({
+                torch::tile(bias_slice[2*m].unsqueeze(0), {128, 1}),
+                torch::tile(bias_slice[2*m+1].unsqueeze(0), {128, 1})})
+        );
+    }
+    return {weight_vec, bias_vec};
+}
+
+} // namespace nexus

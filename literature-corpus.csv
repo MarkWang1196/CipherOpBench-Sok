@@ -1,0 +1,93 @@
+trend_year,title,protocol_class,listed_venue,role
+2022,Characterization of mpc-based private inference for transformer-based models,MPC-Only,ISPASS 2022,trend_only
+2022,Iron: Private Inference on Transformers,Hybrid,NeurIPS 2022,artifact_audit
+2022,THE-X: Privacy-Preserving Transformer Inference with Homomorphic Encryption,FHE-Only,ACL 2022,operator_analysis_elsewhere
+2022,Privacy-Preserving Text Classification on BERT Embeddings with Homomorphic Encryption,FHE-Only,NAACL 2022,trend_only
+2023,PriViT: Vision Transformers for Fast Private Inference,MPC-Only,arXiv 2023,trend_only
+2023,"MPCFormer: Fast, Performant and Private Transformer Inference with MPC",MPC-Only,ICLR 2023,trend_only
+2023,SAL-ViT: Towards Latency Efficient Private Inference on ViT using Selective Attention Search with a Learnable Softmax Approximation,MPC-Only,ICCV 2023,trend_only
+2023,MPCViT: Searching for Accurate and Efficient MPC-Friendly Vision Transformer with Heterogeneous Attention,MPC-Only,ICCV 2023,trend_only
+2023,RNA-ViT: Reduced-dimension Approximate Normalized Attention Vision Transformers for Latency Efficient Private Inference,MPC-Only,ICCAD 2023,trend_only
+2023,Privformer: Privacy-Preserving Transformer with MPC,MPC-Only,EuroS&P 2023,trend_only
+2023,Primer: Fast Private Transformer Inference on Encrypted Data,Hybrid,DAC 2023,artifact_audit
+2023,LLMs Can Understand Encrypted Prompt: Towards Privacy-Computing Friendly Transformers,Hybrid,arXiv 2023,artifact_audit
+2023,CipherGPT: Secure Two-Party GPT Inference,Hybrid,ePrint2023/ IEEE TDSC 2026,artifact_audit
+2023,Homomorphic Evaluation Friendly Vision,FHE-Only,ACSSC 2023,trend_only
+2024,SecureTLM: Private Inference for Transformer-Based Large Model with MPC,MPC-Only,Information Sciences 2024,trend_only
+2024,PowerSoftmax: Towards Secure LLM Inference over Encrypted Data,FHE-Only,Arxiv 2024/AISTATS 2026,artifact_audit
+2024,PPTIF: Privacy-Preserving Transformer Inference Framework for Language Translation,MPC-Only,IEEE Access 2024,trend_only
+2024,SIGMA: Secure GPT Inference with Function Secret Sharing,MPC-Only,PETS 2024,trend_only
+2024,SecureGPT: A Framework for Multi-Party Privacy-Preserving Transformer Inference in GPT,MPC-Only,IEEE TIFS 2024,trend_only
+2024,"BOLT: Privacy-Preserving, Accurate and Efficient Inference for Transformers",Hybrid,IEEE S&P 2024,artifact_audit
+2024,Nimbus: Secure and Efficient Two-Party Inference for Transformers,MPC-Only,NeurIPS/arXiv 2024,trend_only
+2024,PrivCirNet: Efficient Private Inference via Block Circulant Transformation,Hybrid,NeurIPS/arXiv 2024,artifact_audit
+2024,Transformer-Based Language Models and Homomorphic Encryption: An Intersection with BERT-Tiny,FHE-Only,IWSPA 2024,artifact_audit
+2024,PolyTransformer:Converting Transformers to Polynomial Form for Secure Inference Over Homomorphic Encryption,FHE-Only,ICML 2024,artifact_audit
+2024,FastQuery: Communication-Efficient Embedding Table Query for Private LLMs Inference,Hybrid,DAC 2024,trend_only
+2024,CipherFormer: Efficient Transformer Private Inference with Low Round Complexity,Hybrid,CSCWD 2024,trend_only
+2024,TruncFormer: Private LLM Inference Using Only Truncations,MPC-Only,arXiv 2024,trend_only
+2024,PermLLM: Private Inference of Large Language Models within 3 Seconds under WAN,Hybrid,arXiv 2024,trend_only
+2024,Private-Preserving Language Model Inference Based on Secure Multi-Party Computation,MPC-Only,Neurocomputing 2024,trend_only
+2024,Ditto: Quantization-aware Secure Inference of Transformers upon MPC,MPC-Only,ICML 2024,trend_only
+2024,Curl: Private LLMs through Wavelet-Encoded Look-Up Tables,MPC-Only,CAMLIS 2024,trend_only
+2024,MPC-Minimized Secure LLM Inference,MPC-Only,arXiv 2024,trend_only
+2024,MERGE: Fast Private Text Generation,MPC-Only,AAAI 2024,trend_only
+2024,Privacy-Preserving Embedding via Look-up Table Evaluation with Fully Homomorphic Encryption,FHE-Only,ICML 2024,artifact_audit
+2024,Privacy-Preserving Diffusion Model Using Homomorphic Encryption,FHE-Only,arXiv 2024,trend_only
+2024,SecFormer: Fast and Accurate Privacy-Preserving Inference for Transformer Models via SMPC,MPC-Only,Findings of ACL 2024,trend_only
+2024,Fast and Accurate Homomorphic Softmax Evaluation,FHE-Only,CCS 2024,artifact_audit
+2025,ENSI: Efficient Non-Interactive Secure Inference for Large Language Models,FHE-Only,SRDS/arXiv 2025,artifact_audit
+2025,Encryption-Friendly LLM Architecture,FHE-Only,ICLR 2025,artifact_audit
+2025,PrivTF: Efficient and Privacy-Preserving Transformer Inference with Optimized Protocols for Secure NLP,MPC-Only,TNSE 2025,trend_only
+2025,FASTLMPI:Accelerating Private Large Transformers Inference through Fine-Grained Collaborative Computation,Hybrid,IEEE TIFS 2025,artifact_audit
+2025,PUMA: Secure Inference of LLaMA-7B in Five Minutes,MPC-Only,Security and Safety 2025,trend_only
+2025,AERO: Softmax-Only LLMs for Efficient Private Inference,MPC-Only,arXiv 2025,trend_only
+2025,MLFormer: A High Performance MPC Linear Inference Framework for Transformers,MPC-Only,Journal of Cryptographic Engineering 2025,trend_only
+2025,"SHAFT: Secure, Handy, Accurate, and Fast Transformer Inference",MPC-Only,NDSS 2025,trend_only
+2025,EncryptedLLM: Privacy-Preserving Large Language Model Inference via GPU-Accelerated Fully Homomorphic Encryption,FHE-Only,ICML 2025,artifact_audit
+2025,NEXUS: Secure Transformer Inference Made Non-Interactive,FHE-Only,NDSS 2025,artifact_audit
+2025,Powerformer: Efficient and High-Accuracy Privacy-Preserving Language Model with Homomorphic Encryption,FHE-Only,ACL 2025,artifact_audit
+2025,Breaking the Layer Barrier: Remodeling Private Transformer Inference with Hybrid CKKS and MPC,Hybrid,USENIX Security 2025,artifact_audit
+2025,EAST: Efficient and Accurate Secure Inference Framework for Transformer,Hybrid,IEEE TSC 2025,artifact_audit
+2025,BumbleBee: Secure Two-Party Inference Framework for Large Transformers,Hybrid,NDSS 2025,artifact_audit
+2025,CipherPrune: Efficient and Scalable Private Transformer Inference,Hybrid,ICLR 2025,artifact_audit
+2025,Tricycle: Private Transformer Inference with Tricyclic Encodings,FHE-Only,ePrint 2025 / CCS 2026,artifact_audit
+2025,MOAI: Module-Optimizing Architecture for Non-Interactive Secure Transformer Inference,FHE-Only,ePrint 2025 /ICLR 2026,artifact_audit
+2025,THOR: Secure Transformer Inference with Homomorphic Encryption,FHE-Only,CCS 2025,artifact_audit
+2025,MosFormer: Maliciously Secure Three-Party Inference Framework for Large Transformers,MPC-Only,CCS 2025,trend_only
+2025,A New PPML Paradigm for Quantized Models,MPC-Only,NDSS 2025,trend_only
+2025,Comet: Accelerating Private Inference for Large Language Model by Predicting Activation Sparsity,MPC-Only,IEEE S&P 2025,trend_only
+2025,MPCache: MPC-Friendly KV Cache Eviction for Efficient Private LLM Inference,MPC-Only,NeurIPS 2025,trend_only
+2025,Practical Secure Inference Algorithm for a Fine-Tuned Large Language Model Based on Fully Homomorphic Encryption,FHE-Only,IEEE TIFS 2026 / arXiv 2025,trend_only
+2025,Network and Compiler Optimizations for Efficient Linear Algebra Kernels in Private Transformer Inference,FHE-Only,ICCAD 2025 / arXiv 2025,trend_only
+2025,Arion: Attention-Optimized Transformer Inference on Encrypted Data,FHE-Only,Expert Systems with Applications 2026 / ePrint 2025,artifact_audit
+2025,Fission: Distributed Privacy-Preserving Large Language Model Inference,MPC-Only,ePrint 2025,trend_only
+2025,"CENTAUR: Bridging the Impossible Trinity of Privacy, Efficiency, and Performance in Privacy-Preserving Transformer Inference",MPC-Only,ACL2025,trend_only
+2025,CryptoMoE: Privacy-Preserving and Scalable Mixture of Experts Inference via Balanced Expert Routing,MPC-Only,NeurIPS 2025,trend_only
+2025,SLOTHE: Lazy Approximation of Non-Arithmetic Neural Network Functions over Encrypted Data,FHE-Only,USENIX Security 2025,artifact_audit
+2025,Efficient Decoding Methods for Language Models on Encrypted Data,FHE-Only,Findings of IJCNLP-AACL 2025,artifact_audit
+2025,FHE4DMM: A Low-Latency Distributed Matrix Multiplication with Fully Homomorphic Encryption,FHE-Only,IEEE TPDS 2025,operator_analysis_elsewhere
+2025,StressSentry-FHE: A Transformer-Based Privacy-Preserving Framework for Stress Detection Using Quantized Attention,FHE-Only,KSEM 2025 (CCF_C),trend_only
+2025,Private Sampling of Latent Diffusion Models for Encrypted Prompt,FHE-Only,IEEE TCSVT 2025,trend_only
+2025,Orion: A Fully Homomorphic Encryption Framework for Deep Learning,FHE-Only,ASPLOS 2025,trend_only
+2025,MetaKernel: Enabling Efficient Encrypted Neural Network Inference through Unified MVM and Convolution,FHE-Only,OOPSLA 2025,operator_analysis_elsewhere
+2025,Safhire: Practical and Private Hybrid ML Inference with Fully Homomorphic Encryption,Hybrid,TMLR 2026 / arXiv 2025,trend_only
+2026,CryptPEFT: Efficient and Private Neural Network Inference via Parameter-Efficient Fine-Tuning,MPC-Only,NDSS 2026,trend_only
+2026,Euston: Efficient and User-Friendly Secure Transformer Inference with Non-Interactivity,FHE-Only,IEEE S&P 2026,artifact_audit
+2026,ULD-Net: Enabling Ultra-Low-Degree Fully Polynomial Networks for Homomorphically Encrypted Inference,FHE-Only,ICLR 2026,artifact_audit
+2026,STIP: Efficient and Secure Non-Interactive Transformer Inference via Compact Packing,FHE-Only,arXiv/2026,artifact_audit
+2026,AEGIS：Scaling Long-Sequence HE Transformer Inference via Hybrid Parallelism on Multi-GPU Systems,FHE-Only,ICS 2026,artifact_audit
+2026,Secure Transformer Generation with Encrypted KV-Cache Reuse,Hybrid,arXiv 2026,artifact_audit
+2026,CGF-Softmax: A Cumulant-Based Softmax Reformulation for Efficient Inference under Homomorphic Encryption,FHE-Only,arXiv/2026,artifact_audit
+2026,Hyperion- Private Token Sampling with Homomorphic Encryption,FHE-Only,ACL 2026,artifact_audit
+2026,Layer-Parallel Inference Reduces Encrypted Nonlinear Depth in Transformers,FHE-Only,arXiv 2026,trend_only
+2026,"Scaling up FHE-based Privacy-Preserving ML: Higher Throughput, Longer Inputs for LLama-3-8B",FHE-Only,arXiv 2026,artifact_audit
+2026,ATLAS: Automated Approximation of Transformers for Efficient Homomorphic Inference in One Hour,FHE-Only,arXiv 2026,artifact_audit
+2026,SecretVoice1.0: Non-interactive Secure Transformer Inference,FHE-Only,techrXiv 2026,artifact_audit
+2026,PriTran- Privacy-Preserving Inference for Transformer-Based Language Models under Fully Homomorphic Encryption,FHE-Only,CGO 2026,artifact_audit
+2026,General Techniques for Reducing Key-Switching Overhead in Privacy-Preserving Two-Party Transformer Inference,Hybrid,arXiv 2026,trend_only
+2026,ROSETTA: Efficient and Accurate Privacy-Preserving LLM Decoding via Hybrid CKKS/TFHE Evaluation,FHE-Only,CCS 2026,artifact_audit
+2026,Cachemir: Fully Homomorphic Encrypted Inference of Generative Large Language Model with KV Cache,FHE-Only,IEEE S&P 2027 / arXiv 2026,artifact_audit
+2026,EncFormer: Secure and Efficient Transformer Inference over Encrypted Data,Hybrid,IEEE TDSC 2026,artifact_audit
+2026,BlockFormer: An Efficient Private Batch Transformer Inference With Homomorphic Encryption via Block Packing,FHE-Only,IEEE Access 2026,artifact_audit
+2026,Cerium: A Multi-GPU Framework for Terabyte-Scale Encrypted Inference,FHE-Only,SOSP 2026,artifact_audit

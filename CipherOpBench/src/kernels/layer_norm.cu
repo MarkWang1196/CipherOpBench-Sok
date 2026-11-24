@@ -1,0 +1,133 @@
+// Adapted from NEXUS-End2End@23288730907fdb7a8ff7e4683efca35164f3cb8d.
+// Arithmetic schedule retained; graph composition belongs to cipheropbench.
+#include "cipheropbench/kernels/layer_norm.cuh"
+#include "cipheropbench/kernels/nexus_utility.cuh"
+#include <cmath>
+namespace cipheropbench::kernels {
+
+using namespace cipheropbench::kernels;
+using namespace nexus;
+
+void LNEvaluator::layer_norm(PhantomCiphertext &a, PhantomCiphertext &y, int len) {
+  PhantomCiphertext tmp, x2;
+
+  int log_step = log2(len);
+  ckks->evaluator.rotate_vector(a, -len, *ckks->galois_keys, tmp);
+  ckks->evaluator.add_inplace(a, tmp);
+
+  ckks->evaluator.square(a, x2);
+  ckks->evaluator.relinearize_inplace(x2, *ckks->relin_keys);
+  ckks->evaluator.rescale_to_next_inplace(x2);
+
+  tmp = x2;
+  for (int i = 0; i < log_step; ++i) {
+    ckks->evaluator.rotate_vector(tmp, pow(2, i), *ckks->galois_keys, y);
+    ckks->evaluator.add_inplace(y, tmp);
+    tmp = y;
+  }
+
+  PhantomPlaintext delta;
+  ckks->encoder.encode(1.0 / 768, y.params_id(), y.scale(), delta);
+  ckks->evaluator.multiply_plain_inplace(y, delta);
+  ckks->evaluator.rescale_to_next_inplace(y);
+
+  y = ckks->invert_sqrt(y, 4, 2);
+
+  ckks->evaluator.mod_switch_to_inplace(a, y.params_id());
+  ckks->evaluator.multiply(y, a, y);
+  ckks->evaluator.relinearize_inplace(y, *ckks->relin_keys);
+  ckks->evaluator.rescale_to_next_inplace(y);
+
+  // cout << "Moduli left after LayerNorm: " << y.coeff_modulus_size() << endl;
+}
+
+void LNEvaluator::layer_norm_128x768(std::vector<PhantomCiphertext> &x, std::vector<PhantomCiphertext> &res, const FlatVecArray& weight, const FlatVecArray& bias) {
+  normalize_128x768(x,res,weight,bias,false,1.);
+}
+
+void LNEvaluator::layer_norm_paired_128x768(std::vector<PhantomCiphertext>& x, std::vector<PhantomCiphertext>& res,
+                                         const FlatVecArray& weight, const FlatVecArray& bias,
+                                         double variance_bound) {
+  int exponent;
+  TORCH_CHECK(variance_bound>=1.&&std::frexp(variance_bound,&exponent)==.5,
+              "Expected a positive power-of-two variance bound");
+  normalize_128x768(x,res,weight,bias,true,variance_bound);
+}
+
+void LNEvaluator::normalize_128x768(std::vector<PhantomCiphertext>& x, std::vector<PhantomCiphertext>& res,
+                                   const FlatVecArray& weight, const FlatVecArray& bias, bool paired,
+                                   double variance_bound) {
+  const int blocks=paired?6:3;
+  TORCH_CHECK(x.size()==size_t(blocks)&&weight.size()==x.size()&&bias.size()==x.size(),
+              "NEXUS LayerNorm blocks differ from the packed input");
+  TORCH_CHECK_EQ(weight[0].size(), slot_count); // sqrt(n) * gamma
+  TORCH_CHECK_EQ(bias[0].size(), slot_count); // beta
+  std::vector<PhantomCiphertext> tmp(blocks), z(blocks), y(blocks);
+  res.resize(blocks);
+
+  for (int i=0; i<blocks; i++) {
+    tmp[i] = quick_sum(x[i], ckks, 128);
+  }
+  PhantomCiphertext sumx, rot_sumx;
+  ckks->evaluator.add_many(tmp, sumx);
+  if(!paired){
+    ckks->evaluator.rotate_vector(sumx, slot_count / 2, *(ckks->galois_keys), rot_sumx);
+    ckks->evaluator.add_inplace(sumx, rot_sumx);
+  }
+
+  auto ratio_pt = CKKSEncode(ckks->init_vec_with_value(1.0 / 768), ckks, &sumx, true);
+  ckks->evaluator.multiply_plain_inplace(sumx, ratio_pt);
+  ckks->evaluator.rescale_to_next_inplace(sumx);
+  for (int i=0; i<blocks; i++) {
+    PhantomCiphertext x_copy = x[i];
+    ckks->evaluator.mod_switch_to_inplace(x_copy, sumx.chain_index());
+    x_copy.set_scale(sumx.scale());
+    ckks->evaluator.sub(x_copy, sumx, z[i]);
+    ckks->evaluator.square(z[i], y[i]);
+    ckks->evaluator.relinearize_inplace(y[i], *ckks->relin_keys);
+    ckks->evaluator.rescale_to_next_inplace(y[i]);
+  }
+  for (int i=0; i<blocks; i++) {
+    tmp[i] = quick_sum(y[i], ckks, 128);
+  }
+  PhantomCiphertext sumy, rot_sumy;
+  ckks->evaluator.add_many(tmp, sumy);
+  if(!paired){
+    ckks->evaluator.rotate_vector(sumy, slot_count / 2, *(ckks->galois_keys), rot_sumy);
+    ckks->evaluator.add_inplace(sumy, rot_sumy);
+  }
+
+  PhantomPlaintext delta;
+  if(paired){
+    const auto prime=ckks->context->get_context_data(sumy.chain_index()).parms().coeff_modulus().back().value();
+    ckks->encoder.encode(1./(768.*variance_bound),sumy.chain_index(),prime*kernels::scale/sumy.scale(),delta);
+  }else delta=CKKSEncode(ckks->init_vec_with_value(1./768.),ckks,&sumy,true);
+  ckks->evaluator.multiply_plain_inplace(sumy, delta);
+  ckks->evaluator.rescale_to_next_inplace(sumy);
+
+  if(paired){
+    sumy.set_scale(kernels::scale);
+    bootstrap(sumy,bootstrapper,true);
+    if(variance_bound!=1.){
+      PhantomPlaintext factor;
+      ckks->encoder.encode(variance_bound,sumy.chain_index(),1.,factor);
+      ckks->evaluator.multiply_plain_inplace(sumy,factor);
+    }
+  }else bootstrap(sumy,bootstrapper);
+  PhantomCiphertext inv_sqrt = ckks->invert_sqrt(sumy, 4, 2); // Consumes 15 levels
+
+  for (int i=0; i<blocks; i++) {
+    PhantomCiphertext a = z[i];
+    auto weight_pt = CKKSEncode(weight[i], ckks, &a);
+    ckks->evaluator.multiply_plain_inplace(a, weight_pt);
+    ckks->evaluator.rescale_to_next_inplace(a);
+    mod_switch_to_same(a, inv_sqrt, ckks);
+    ckks->evaluator.multiply(inv_sqrt, a, res[i]);
+    ckks->evaluator.relinearize_inplace(res[i], *ckks->relin_keys);
+    ckks->evaluator.rescale_to_next_inplace(res[i]);
+    auto bias_pt = CKKSEncode(bias[i], ckks, &res[i]);
+    ckks->evaluator.add_plain_inplace(res[i], bias_pt);
+  }
+  // std::cout << "Moduli left after layernorm: " << res[0].coeff_modulus_size() << std::endl;
+}
+}

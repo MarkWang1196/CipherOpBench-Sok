@@ -1,0 +1,70 @@
+diff --git a/src/rns.cu b/src/rns.cu
+index b2e6289..f20e28a 100644
+--- a/src/rns.cu
++++ b/src/rns.cu
+@@ -1131,7 +1131,14 @@ namespace phantom {
+             uint64_t c_last_coeff = src[(tid % poly_degree) + next_base_q_size * poly_degree];
+ 
+             // ci[last] mod qj
+-            dst[tid] = barrett_reduce_uint64_uint64(c_last_coeff, mod.value(), mod.const_ratio()[1]);
++            auto last = base_q[next_base_q_size];
++            c_last_coeff = barrett_reduce_uint64_uint64(c_last_coeff, last.value(), last.const_ratio()[1]);
++            auto reduced = barrett_reduce_uint64_uint64(c_last_coeff, mod.value(), mod.const_ratio()[1]);
++            if (c_last_coeff > last.value()/2) {
++                auto correction = barrett_reduce_uint64_uint64(last.value(), mod.value(), mod.const_ratio()[1]);
++                reduced = sub_uint64_uint64_mod(reduced, correction, mod.value());
++            }
++            dst[tid] = reduced;
+         }
+     }
+ 
+diff --git a/src/rns_base.cu b/src/rns_base.cu
+index c061ff1..6c9c8e5 100644
+--- a/src/rns_base.cu
++++ b/src/rns_base.cu
+@@ -10,6 +10,27 @@ using namespace phantom::arith;
+ 
+ namespace phantom::arith {
+ 
++    // Equivalent limb arithmetic with explicit data dependencies.
++    // Diagnostic alternative to implicit cross-asm condition-code state in CRT accumulation.
++    __forceinline__ __device__ void crt_add_mod_explicit(
++            const uint64_t* a,const uint64_t* b,const uint64_t* modulus,
++            uint32_t count,uint64_t* out) {
++        uint64_t carry=0;
++        for(uint32_t i=0;i<count;++i){
++            const uint64_t ai=a[i],bi=b[i],partial=ai+bi,word=partial+carry;
++            carry=uint64_t(partial<ai || word<partial);out[i]=word;
++        }
++        if(carry || is_greater_than_or_equal_uint(out,modulus,count)){
++            uint64_t borrow=0;
++            for(uint32_t i=0;i<count;++i){
++                const uint64_t ai=out[i],bi=modulus[i],partial=ai-bi,word=partial-borrow;
++                borrow=uint64_t(ai<bi || partial<borrow);out[i]=word;
++            }
++        }
++    }
++
++
++
+     void DRNSBase::init(const RNSBase &cpu_rns_base, const cudaStream_t &stream) {
+         size_ = cpu_rns_base.size();
+ 
+@@ -220,7 +241,7 @@ namespace phantom::arith {
+                                          temp_prod_array + tid * size); // result and size
+ 
+                     // accumulation and mod Q over ZZ
+-                    add_uint_uint_mod(temp_prod_array + tid * size, acc_mod_array + tid * size, base_prod, size,
++                    crt_add_mod_explicit(temp_prod_array + tid * size, acc_mod_array + tid * size, base_prod, size,
+                                       acc_mod_array + tid * size);
+                 }
+             } else {
+@@ -287,7 +308,7 @@ namespace phantom::arith {
+                                          temp_prod_array + tid * size); // result and size
+ 
+                     // accumulation and mod Q over ZZ
+-                    add_uint_uint_mod(temp_prod_array + tid * size, acc_mod_array + tid * size, base_prod, size,
++                    crt_add_mod_explicit(temp_prod_array + tid * size, acc_mod_array + tid * size, base_prod, size,
+                                       acc_mod_array + tid * size);
+                 }
+             } else {

@@ -1,0 +1,72 @@
+// Adapted from NEXUS-End2End@23288730907fdb7a8ff7e4683efca35164f3cb8d.
+// Arithmetic schedule retained; graph composition belongs to cipheropbench.
+#pragma once
+
+#include <cuComplex.h>
+#include "utils.cuh"
+#include <precompiled/torch_includes.h>
+
+namespace cipheropbench::kernels {
+using namespace ::nexus;
+
+typedef std::vector<cuDoubleComplex> FlatVec;
+typedef std::vector<FlatVec> FlatVecArray;
+typedef std::vector<FlatVecArray> FlatVecMat;
+
+// Convert a torch::Tensor to a FlatVec (std::vector<double>)
+template<class T = cuDoubleComplex>
+inline std::vector<T> vector_from_tensor(torch::Tensor t) {
+    TORCH_CHECK(t.dtype() == torch::kDouble);
+    t = t.to(torch::kCPU).contiguous();
+    std::vector<double> result(t.const_data_ptr<double>(), t.const_data_ptr<double>() + t.numel());
+    if constexpr (std::is_same<T, double>::value) {
+        return result;
+    } else if (std::is_same<T, cuDoubleComplex>::value) {
+        std::vector<cuDoubleComplex> result_complex(t.numel());
+        for (int i = 0; i < t.numel(); i++) {
+            result_complex[i] = make_cuDoubleComplex(result[i], 0);
+        }
+        return result_complex;
+    } else {
+        throw std::runtime_error("Unsupported type");
+    }
+}
+
+inline torch::Tensor tensor_from_vector(std::vector<double> vec, torch::IntArrayRef size) {
+    return torch::from_blob(vec.data(), size, torch::kDouble).clone();
+}
+
+// basic pack
+
+// Flatten and concatenate a single tensor
+inline FlatVec flatten_pack(torch::Tensor A) {
+    FlatVec ct_matrix = vector_from_tensor(A);
+    auto buf = ct_matrix;
+    ct_matrix.insert(ct_matrix.end(), buf.begin(), buf.end());
+    return ct_matrix;
+}
+// Flatten and concatenate two tensors
+inline FlatVec flatten_pack(torch::Tensor A, torch::Tensor B) {
+    FlatVec ct_matrix = vector_from_tensor(A);
+    FlatVec vec_B = vector_from_tensor(B);
+    ct_matrix.insert(ct_matrix.end(), vec_B.begin(), vec_B.end());
+    return ct_matrix;
+}
+
+// matrix pack
+FlatVecArray row_pack_128x768(torch::Tensor matrix);
+FlatVecArray row_pack_768x64x2(torch::Tensor matrix1, torch::Tensor matrix2);
+FlatVecMat row_pack_768x768(torch::Tensor matrix);
+FlatVecArray row_pack_768x128(torch::Tensor matrix);
+
+// vector pack
+FlatVec row_pack_128x1(torch::Tensor vector);
+FlatVec row_pack_64x1x2(torch::Tensor vector1, torch::Tensor vector2);
+FlatVecArray row_pack_768x1(torch::Tensor vector);
+
+std::pair<FlatVecArray, FlatVecArray> row_pack_layer_norm(torch::Tensor weight, torch::Tensor bias);
+
+// attention mask related
+FlatVec convert_mask(torch::Tensor mask);
+
+}

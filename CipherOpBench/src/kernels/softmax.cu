@@ -1,0 +1,77 @@
+// Adapted from NEXUS-End2End@23288730907fdb7a8ff7e4683efca35164f3cb8d.
+// Arithmetic schedule retained; graph composition belongs to cipheropbench.
+#include "cipheropbench/kernels/constant.cuh"
+#include "cipheropbench/kernels/softmax.cuh"
+#include "cipheropbench/kernels/nexus_utility.cuh"
+namespace cipheropbench::kernels {
+
+using namespace cipheropbench::kernels;
+using namespace nexus;
+
+void SoftmaxEvaluator::softmax(PhantomCiphertext &x, PhantomCiphertext &res, int len) {
+  PhantomCiphertext tmp, exp_x;
+
+  int log_step = log2(len);
+  ckks->evaluator.rotate_vector(x, -len, *ckks->galois_keys, tmp);
+  ckks->evaluator.add_inplace(x, tmp);
+
+  exp_x = ckks->exp(x);
+
+  tmp = exp_x;
+  for (int i = 0; i < log_step; ++i) {
+    ckks->evaluator.rotate_vector(tmp, pow(2, i), *ckks->galois_keys, res);
+    ckks->evaluator.add_inplace(res, tmp);
+    tmp = res;
+  }
+
+  // Normalize res/delta to [0, 1]
+  PhantomPlaintext delta;
+  ckks->encoder.encode(0.01, res.params_id(), res.scale(), delta);
+  ckks->evaluator.multiply_plain_inplace(res, delta);
+  ckks->evaluator.rescale_to_next_inplace(res);
+
+  res = ckks->inverse(res);
+
+  // Recover 1/res
+  ckks->encoder.encode(0.01, res.params_id(), res.scale(), delta);
+  ckks->evaluator.multiply_plain_inplace(res, delta);
+  ckks->evaluator.rescale_to_next_inplace(res);
+
+  ckks->evaluator.mod_switch_to_inplace(exp_x, res.params_id());
+  ckks->evaluator.multiply(res, exp_x, res);
+  ckks->evaluator.relinearize_inplace(res, *ckks->relin_keys);
+  ckks->evaluator.rescale_to_next_inplace(res);
+
+  // cout << "Moduli left after SoftMax: " << res.coeff_modulus_size() << endl;
+}
+
+void SoftmaxEvaluator::softmax_128x128(PhantomCiphertext &x, PhantomCiphertext &res, FlatVec attention_mask) {
+  PhantomCiphertext tmp, exp_x;
+
+  PhantomPlaintext mask_pt = CKKSEncode(attention_mask, ckks, &x);
+  ckks->evaluator.add_plain_inplace(x, mask_pt);
+
+  exp_x = ckks->exp(x); // Consumes 8 levels
+
+  res = quick_sum(exp_x, ckks, 128);
+  bootstrap(res, bootstrapper, true);
+
+  // Normalize res/delta to [0, 1]
+  PhantomPlaintext delta = CKKSEncode(ckks->init_vec_with_value(0.01), ckks, &res);
+  ckks->evaluator.multiply_plain_inplace(res, delta);
+  ckks->evaluator.rescale_to_next_inplace(res);
+
+  res = ckks->inverse(res); // Consumes 5 levels
+
+  // Recover 1/res
+  delta = CKKSEncode(ckks->init_vec_with_value(0.01), ckks, &res);
+  ckks->evaluator.multiply_plain_inplace(res, delta);
+  ckks->evaluator.rescale_to_next_inplace(res);
+
+  ckks->evaluator.mod_switch_to_inplace(res, exp_x.chain_index());
+  ckks->evaluator.multiply(res, exp_x, res);
+  ckks->evaluator.relinearize_inplace(res, *ckks->relin_keys);
+  ckks->evaluator.rescale_to_next_inplace(res);
+  // std::cout << "Moduli left after softmax: " << res.coeff_modulus_size() << std::endl;
+}
+}
